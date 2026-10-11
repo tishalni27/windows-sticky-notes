@@ -18,21 +18,68 @@ root.geometry("400x400")               # size of window, NOT STICKY NOTE
 
 def create_note(saved_title="", saved_content=""):                     # created a function, when runs shows new note clicked in terminal
     note = tk.Toplevel(root)           # create another window belonging to same application, can create many
-    note.attributes("-topmost", False)
+    note.overrideredirect(True)
     note.geometry("250x250")
-    note.configure(bg="#FFD6E7")
+    note.configure(bg="#FFF2A8")
+
+    # Custom yellow title bar
+    header = tk.Frame(note, bg="#F2D46B", height=30)
+    header.pack(fill="x")
+    header.pack_propagate(False)
+
+    
+
+    # Darker yellow close button
+    close_button = tk.Button(
+        header,
+        text="✕",
+        bg="#D9B94E",
+        fg="#5C4700",
+        bd=0,
+        activebackground="#C9A63D",
+        command=note.destroy
+    )
+    close_button.pack(side="right", fill="y")
+    def send_to_back():
+        note.attributes("-topmost", False)
+        note.lower()
+
+    # Pin button
+    pin_button = tk.Button(
+        header,
+        text="📌",
+        bg="#D9B94E",
+        fg="#5C4700",
+        bd=0,
+        activebackground="#C9A63D",
+        command=send_to_back
+    )
+    pin_button.pack(side="right", fill="y")
+
+
+
+    # Move the sticky note by dragging its header
+    def start_move(event):
+        note.start_x = event.x_root - note.winfo_x()
+        note.start_y = event.y_root - note.winfo_y()
+
+    def move_note(event):
+        x = event.x_root - note.start_x
+        y = event.y_root - note.start_y
+        note.geometry(f"+{x}+{y}")
+
+    header.bind("<Button-1>", start_move)
+    header.bind("<B1-Motion>", move_note)
 
     # allow to edit text in the sticky note 
     title = tk.Entry(  # Entry is single line text input, to allow them to put/edit title
         note,          # means input belongs inside sticky note
         font=("Arial",14,"bold"),
-        bg="#FFD6E7",
+        bg="#FFF2A8",
         bd=0  #removes border
-
     )
     title.pack(fill="x", padx=10, pady=10)
     title.insert(0, saved_title)
-    
 
     # create a larger text area
 
@@ -40,7 +87,7 @@ def create_note(saved_title="", saved_content=""):                     # created
     content = tk.Text(
         note,      #same, its for putting text in sticky note
         font=("Arial", 11),
-        bg="#FFD6E7",
+        bg="#FFF2A8",
         bd=0,
         wrap="word" # means long sentence auto continue on next line and not cut off horizontally
     )
@@ -54,7 +101,7 @@ def create_note(saved_title="", saved_content=""):                     # created
     content.insert("1.0", saved_content)
 
     notes.append({
-        "title":title, 
+        "title":title,
         "content":content
     })
 
@@ -134,10 +181,12 @@ save_button.pack(pady=10)
 
 def close_app():
     save_notes()
-    root.destroy()
+    root.withdraw()
 
 
 root.protocol("WM_DELETE_WINDOW", close_app)
+
+
 
 load_notes()
 root.mainloop() # mainloop keeps the application running, listening for events, mouse clicks, keyboard and window closing
