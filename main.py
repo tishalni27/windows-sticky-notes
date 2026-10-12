@@ -2,8 +2,20 @@
 import tkinter as tk #tkinter is built in library to create dekstop interface
 import json 
 from pathlib import Path
+import os 
+import shutil
 
-SAVE_FILE = Path(__file__).parent / "my_sticky_notes.json"
+
+APP_FOLDER = Path(os.environ["APPDATA"]) / "MyStickyNotes"
+APP_FOLDER.mkdir(parents=True, exist_ok=True)
+
+SAVE_FILE = APP_FOLDER / "my_sticky_notes.json"
+
+OLD_SAVE_FILE = Path(__file__).parent / "my_sticky_notes.json"
+
+if not SAVE_FILE.exists() and OLD_SAVE_FILE.exists():
+    shutil.copy2(OLD_SAVE_FILE, SAVE_FILE)
+
 notes = [] # creates empty python list
 loading = False
 
