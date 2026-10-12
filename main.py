@@ -1,10 +1,10 @@
 
 import tkinter as tk #tkinter is built in library to create dekstop interface
-import json 
+import json
 from pathlib import Path
-import os 
+import os
 import shutil
-
+from settings import setup_settings
 
 APP_FOLDER = Path(os.environ["APPDATA"]) / "MyStickyNotes"
 APP_FOLDER.mkdir(parents=True, exist_ok=True)
@@ -25,34 +25,55 @@ root = tk.Tk() #tk gives it a shorter name, here root is a variable, tk.Tk creat
 
 root.title("My Sticky Notes")          # window's title bar
 root.geometry("400x400")               # size of window, NOT STICKY NOTE
-root.withdraw() #hides main window but keeps apps running 
+root.withdraw() #hides main window but keeps apps running
 
 
+def open_settings(event=None):
+    # Show the main control window
+    root.deiconify()
+    root.lift()
+    root.focus_force()
 
-def create_note(saved_title="", saved_content=""):                     # created a function, when runs shows new note clicked in terminal
+
+def create_note(saved_title="", saved_content="", color="#FFF2A8"):
+    # created a function, when runs shows new note clicked in terminal
     note = tk.Toplevel(root)           # create another window belonging to same application, can create many
     note.overrideredirect(True)
     note.geometry("250x250")
-    note.configure(bg="#FFF2A8")
+    note.configure(bg=color)
 
     # Custom yellow title bar
-    header = tk.Frame(note, bg="#F2D46B", height=30)
+    # Custom title bar matching the sticky note color
+    HEADER_COLORS = {
+        "#FFF2A8": "#F2D46B",  # Yellow
+        "#FFD6E7": "#F2A8C6",  # Pink
+        "#CDE9FF": "#91C9F2",  # Blue
+        "#D8F5D0": "#A5D99A"   # Green
+    }
+
+    header_color = HEADER_COLORS.get(color, "#F2D46B")
+
+    header = tk.Frame(note, bg=header_color, height=30)
     header.pack(fill="x")
     header.pack_propagate(False)
 
-    
-
     # Darker yellow close button
+    def close_note():
+        # Remove this note from the screen and save remaining notes
+        note.destroy()
+        save_notes()
+
     close_button = tk.Button(
         header,
         text="✕",
-        bg="#D9B94E",
+        bg=header_color,
         fg="#5C4700",
         bd=0,
-        activebackground="#C9A63D",
-        command=note.destroy
+        activebackground=header_color,
+        command=close_note
     )
     close_button.pack(side="right", fill="y")
+
     def send_to_back():
         note.attributes("-topmost", False)
         note.lower()
@@ -61,15 +82,26 @@ def create_note(saved_title="", saved_content=""):                     # created
     pin_button = tk.Button(
         header,
         text="📌",
-        bg="#D9B94E",
+        bg=header_color,
         fg="#5C4700",
         bd=0,
-        activebackground="#C9A63D",
+        activebackground=header_color,
         command=send_to_back
     )
     pin_button.pack(side="right", fill="y")
 
-
+    # Plus button to open the settings window
+    plus_button = tk.Button(
+        header,
+        text="+",
+        bg=header_color,
+        fg="#5C4700",
+        bd=0,
+        font=("Arial", 14, "bold"),
+        activebackground=header_color,
+        command=open_settings
+    )
+    plus_button.pack(side="right", fill="y")
 
     # Move the sticky note by dragging its header
     def start_move(event):
@@ -84,11 +116,11 @@ def create_note(saved_title="", saved_content=""):                     # created
     header.bind("<Button-1>", start_move)
     header.bind("<B1-Motion>", move_note)
 
-    # allow to edit text in the sticky note 
+    # allow to edit text in the sticky note
     title = tk.Entry(  # Entry is single line text input, to allow them to put/edit title
         note,          # means input belongs inside sticky note
         font=("Arial",14,"bold"),
-        bg="#FFF2A8",
+        bg=color,
         bd=0  #removes border
     )
     title.pack(fill="x", padx=10, pady=10)
@@ -96,11 +128,11 @@ def create_note(saved_title="", saved_content=""):                     # created
 
     # create a larger text area
 
-    #for ur notes inside 
+    #for ur notes inside
     content = tk.Text(
         note,      #same, its for putting text in sticky note
         font=("Arial", 11),
-        bg="#FFF2A8",
+        bg=color,
         bd=0,
         wrap="word" # means long sentence auto continue on next line and not cut off horizontally
     )
@@ -114,8 +146,10 @@ def create_note(saved_title="", saved_content=""):                     # created
     content.insert("1.0", saved_content)
 
     notes.append({
-        "title":title,
-        "content":content
+        "window": note,
+        "title": title,
+        "content": content,
+        "color": color
     })
 
     title.bind("<KeyRelease>", auto_save)
@@ -126,7 +160,7 @@ def create_note(saved_title="", saved_content=""):                     # created
 
 
 def save_notes():
-    saved_data =[]
+    saved_data = []
     print("Number of notes:", len(notes))
     print("Saving to:", SAVE_FILE)
 
@@ -135,11 +169,11 @@ def save_notes():
             continue
 
         note_info = {  #create a dictionary
-            "title":note["title"].get(),
-            "content": note["content"].get("1.0", "end-1c")
-
+            "title": note["title"].get(),
+            "content": note["content"].get("1.0", "end-1c"),
+            "color": note["color"]
         }
-        saved_data.append(note_info)  #add dictionary to our lsit 
+        saved_data.append(note_info)  #add dictionary to our lsit
         print("Note data:", note_info)
 
     with open(SAVE_FILE, "w", encoding="utf-8") as file:
@@ -152,44 +186,36 @@ def save_notes():
 def auto_save(event=None):
     if not loading:
         save_notes()
-    
+
 
 def load_notes():
     global loading
 
-    if not SAVE_FILE.exists():   #check whether file exists 
+    if not SAVE_FILE.exists():   #check whether file exists
         return
 
-    with open(SAVE_FILE, "r", encoding="utf-8") as file:
-        saved_data = json.load(file)
+    try:
+        with open(SAVE_FILE, "r", encoding="utf-8") as file:
+            saved_data = json.load(file)
+    except json.JSONDecodeError:
+        print("JSON file is empty or invalid. No notes loaded.")
+        return
 
     loading = True
 
     try:
         for note in saved_data:
             create_note(
-                note["title"],
-                note["content"]
+                note.get("title", ""),
+                note.get("content", ""),
+                note.get("color", "#FFF2A8")
             )
     finally:
         loading = False
 
 
-new_button = tk.Button( # tk.Button creates a button
-    root,               # tells tkinter which window the button belongs to
-    text ="+ New Note", # determines the buttons label
-    command=lambda: create_note() # tell python to execute when button is clicked
-)
-
-new_button.pack(pady=20)
-
-save_button = tk.Button(
-    root,
-    text="Save Notes",
-    command=save_notes
-)
-
-save_button.pack(pady=10)
+# Load the settings interface from settings.py
+setup_settings(root, create_note)
 
 
 def close_app():
@@ -199,12 +225,12 @@ def close_app():
 
 root.protocol("WM_DELETE_WINDOW", close_app)
 
-def open_settings(event=None):
-    root.deiconify()
-    root.lift()
-    root.focus_force()
-
 root.bind_all("<Control-p>", open_settings)
 
 load_notes()
+
+# If there are no saved notes, open settings automatically
+if not any(note["window"].winfo_exists() for note in notes):
+    open_settings()
+
 root.mainloop() # mainloop keeps the application running, listening for events, mouse clicks, keyboard and window closing

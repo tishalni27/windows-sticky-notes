@@ -14,7 +14,7 @@ def setup_settings(root, create_note):
 
     # Create the settings window design
     root.title("Sticky Notes Settings")
-    root.geometry("350x350")
+    root.geometry("350x400")
     root.configure(bg="#FFFDF5")
 
     # Heading
