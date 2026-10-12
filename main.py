@@ -13,6 +13,7 @@ root = tk.Tk() #tk gives it a shorter name, here root is a variable, tk.Tk creat
 
 root.title("My Sticky Notes")          # window's title bar
 root.geometry("400x400")               # size of window, NOT STICKY NOTE
+root.withdraw() #hides main window but keeps apps running 
 
 
 
@@ -186,7 +187,12 @@ def close_app():
 
 root.protocol("WM_DELETE_WINDOW", close_app)
 
+def open_settings(event=None):
+    root.deiconify()
+    root.lift()
+    root.focus_force()
 
+root.bind_all("<Control-p>", open_settings)
 
 load_notes()
 root.mainloop() # mainloop keeps the application running, listening for events, mouse clicks, keyboard and window closing
