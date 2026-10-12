@@ -13,45 +13,111 @@ COLORS = {
 def setup_settings(root, create_note):
 
     # Create the settings window design
-    root.title("Sticky Notes Settings")
-    root.geometry("350x400")
-    root.configure(bg="#FFFDF5")
+    root.title("My Sticky Notes | Settings")
+    root.geometry("390x430")
+    root.resizable(False, False)
+    root.configure(bg="#F7F8FA")
+
+    # Main content container
+    container = tk.Frame(
+        root,
+        bg="#F7F8FA"
+    )
+    container.pack(
+        fill="both",
+        expand=True,
+        padx=28,
+        pady=25
+    )
 
     # Heading
     heading = tk.Label(
-        root,
+        container,
         text="My Sticky Notes",
-        font=("Arial", 18, "bold"),
-        bg="#FFFDF5"
+        font=("Segoe UI", 22, "bold"),
+        fg="#252A32",
+        bg="#F7F8FA"
     )
-    heading.pack(pady=20)
+    heading.pack(anchor="w")
+
+    # Subtitle
+    subtitle = tk.Label(
+        container,
+        text="Capture ideas, reminders and little thoughts.",
+        font=("Segoe UI", 10),
+        fg="#747B86",
+        bg="#F7F8FA"
+    )
+    subtitle.pack(anchor="w", pady=(5, 25))
 
     # Button to create a new note
     new_button = tk.Button(
-        root,
-        text="+ New Note",
-        font=("Arial", 12),
-        command=create_note
+        container,
+        text="+  Create New Note",
+        font=("Segoe UI", 12, "bold"),
+        bg="#30343B",
+        fg="white",
+        activebackground="#454B55",
+        activeforeground="white",
+        bd=0,
+        relief="flat",
+        cursor="hand2",
+        height=2,
+        command=lambda: create_note()
     )
-    new_button.pack(pady=10)
+    new_button.pack(fill="x")
 
     # Color selection heading
     color_label = tk.Label(
-        root,
-        text="Choose Note Color",
-        font=("Arial", 12, "bold"),
-        bg="#FFFDF5"
+        container,
+        text="CHOOSE A COLOR",
+        font=("Segoe UI", 9, "bold"),
+        fg="#747B86",
+        bg="#F7F8FA"
     )
-    color_label.pack(pady=10)
+    color_label.pack(anchor="w", pady=(30, 12))
+
+    # Container for color buttons
+    colors_frame = tk.Frame(
+        container,
+        bg="#F7F8FA"
+    )
+    colors_frame.pack(fill="x")
 
     # Create a button for every color
-    for color_name, color_code in COLORS.items():
+    for index, (color_name, color_code) in enumerate(COLORS.items()):
 
         color_button = tk.Button(
-            root,
+            colors_frame,
             text=color_name,
+            font=("Segoe UI", 11),
             bg=color_code,
-            width=20,
+            fg="#30343B",
+            activebackground=color_code,
+            bd=0,
+            relief="flat",
+            cursor="hand2",
+            height=2,
             command=lambda c=color_code: create_note(color=c)
         )
-        color_button.pack(pady=4)
+
+        color_button.grid(
+            row=index // 2,
+            column=index % 2,
+            padx=5,
+            pady=5,
+            sticky="ew"
+        )
+
+    colors_frame.columnconfigure(0, weight=1)
+    colors_frame.columnconfigure(1, weight=1)
+
+    # Footer
+    footer = tk.Label(
+        container,
+        text="Your notes are saved automatically.",
+        font=("Segoe UI", 9),
+        fg="#9298A1",
+        bg="#F7F8FA"
+    )
+    footer.pack(side="bottom", pady=(20, 0))
